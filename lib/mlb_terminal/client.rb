@@ -14,12 +14,12 @@ module MLBTerminal
             :wins   => game["home_win"],
             :losses => game["home_loss"]},
          :away_team => {
-            :name   => game["home_team_name"],
-            :wins   => game["home_win"],
-            :losses => game["home_loss"]},
+            :name   => game["away_team_name"],
+            :wins   => game["away_win"],
+            :losses => game["away_loss"]},
          :score => {
-          :away => (game.xpath("linescore/r").first["away"] rescue nil),
-          :home => (game.xpath("linescore/r").first["home"] rescue nil)},
+          :home => (game.xpath("linescore/r").first["home"] rescue nil),
+          :away => (game.xpath("linescore/r").first["away"] rescue nil)},
          :starts => "#{game["time"]} #{game["time_zone"]}",
          :status => game.xpath("status").first["ind"]}}
     end
