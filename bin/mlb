@@ -3,18 +3,30 @@
 require 'rubygems'
 require 'commander/import'
 require 'mlb_terminal'
+require 'date'
 
 program :version, MLBTerminal::VERSION
 program :description, 'Stream MLB games into the terminal'
  
 command :list do |c|
   c.syntax = 'mlb list [options]'
-  c.summary = ''
-  c.description = ''
-  c.example 'description', 'command example'
-  c.option '--some-switch', 'Some switch that does something'
+  c.summary = 'Print out a list of scheduled games for the specified date'
+  c.description = 'Print out a tab-seperated value list to STDOUT wih columns ' \
+                  'for index, team names, game status, and current score.'
+  c.example 'description', 'mlb --date "2012-09-28" | grep Nationals'
+  c.option '--date STRING', String, 'List games for specified dates (Default: today)'
   c.action do |args, options|
-    # Do something or c.when_called Mlbterminal::Commands::List
+    options.default :date => Time.now.to_date.to_s
+    MLBTerminal::Client.list_games(Date.parse options.date).each_with_index do |game, index|
+      puts [
+        index,
+        "#{game[:away_team][:name]} " \
+          "(#{game[:away_team][:wins]}-#{game[:away_team][:losses]}) " \
+          "@ #{game[:home_team][:name]} " \
+          "(#{game[:home_team][:wins]}-#{game[:home_team][:losses]})",
+        "#{game[:starts]} (#{game[:status]})",
+        "#{game[:score][:away]}-#{game[:score][:home]}"].join("\t")
+    end
   end
 end
 
