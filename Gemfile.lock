@@ -1,0 +1,20 @@
+PATH
+  remote: .
+  specs:
+    mlb_terminal (0.0.1)
+      commander
+      nokogiri
+
+GEM
+  remote: http://rubygems.org/
+  specs:
+    commander (4.1.2)
+      highline (~> 1.6.11)
+    highline (1.6.15)
+    nokogiri (1.5.5)
+
+PLATFORMS
+  ruby
+
+DEPENDENCIES
+  mlb_terminal!

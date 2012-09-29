@@ -1,0 +1,31 @@
+#!/usr/bin/env ruby
+
+require 'rubygems'
+require 'commander/import'
+require 'mlb_terminal'
+
+program :version, MLBTerminal::VERSION
+program :description, 'Stream MLB games into the terminal'
+ 
+command :list do |c|
+  c.syntax = 'mlb list [options]'
+  c.summary = ''
+  c.description = ''
+  c.example 'description', 'command example'
+  c.option '--some-switch', 'Some switch that does something'
+  c.action do |args, options|
+    # Do something or c.when_called Mlbterminal::Commands::List
+  end
+end
+
+command :watch do |c|
+  c.syntax = 'mlb watch [options]'
+  c.summary = ''
+  c.description = ''
+  c.example 'description', 'command example'
+  c.option '--some-switch', 'Some switch that does something'
+  c.action do |args, options|
+    # Do something or c.when_called Mlbterminal::Commands::Watch
+  end
+end
+
