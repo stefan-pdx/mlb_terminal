@@ -8,8 +8,8 @@ Gem::Specification.new do |s|
   s.platform    = Gem::Platform::RUBY
   s.authors     = ["Stefan Novak"]
   s.email       = ["stefan.louis.novak@gmail.com"]
-  s.homepage    = ""
-  s.description = %q{Command line interface to keeping track of MLB ballgames}
+  s.homepage    = "https://github.com/slnovak/mlb_terminal"
+  s.description = %q{A small terminal app to translate MLB baseball feeds into the terminal for easy manipulation.} 
   s.summary     = %q{Command line interface to keeping track of MLB ballgames}
 
   s.files         = `git ls-files`.split("\n")
