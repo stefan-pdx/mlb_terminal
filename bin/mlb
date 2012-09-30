@@ -8,8 +8,8 @@ require 'date'
 program :version, MLBTerminal::VERSION
 program :description, 'Stream MLB games into the terminal'
  
-command :list do |c|
-  c.syntax = 'mlb list [options]'
+command :games do |c|
+  c.syntax = 'mlb games [options] [date]'
   c.summary = 'Print out a list of scheduled games for the specified date'
   c.description = 'Print out a tab-seperated value list to STDOUT wih columns ' \
                   'for index, team names, game status, and current score.'
@@ -30,14 +30,40 @@ command :list do |c|
   end
 end
 
-command :watch do |c|
-  c.syntax = 'mlb watch [options]'
-  c.summary = ''
-  c.description = ''
+command :game do |c|
+  c.syntax = 'mlb game [options] [game-number]'
+  c.summary = 'Print game events'
+  c.description = 'Print play-by-play action for the corresponding game. Columns: time, inning, balls/strikes/outs/description.'
   c.example 'description', 'command example'
-  c.option '--some-switch', 'Some switch that does something'
+  c.option '--date STRING', String, 'Specify the date for the corresponding game number.'
   c.action do |args, options|
-    # Do something or c.when_called Mlbterminal::Commands::Watch
+    options.default :date => Time.now.to_date.to_s
+
+    # Input validation.
+    date = (Date.parse(options.date) rescue Time.now.to_date)
+    if (Float(args.first) rescue nil).nil?
+      puts "Error: Game number must be a valid integer"
+      break
+    end
+    
+    game_number = args.first.to_i
+    game_info = MLBTerminal::Client.list_games(date)[game_number]
+
+    if game_info.nil?
+      puts "Error: Game does not exist"
+      break
+    end
+    
+    game = MLBTerminal::Client.new(game_info[:game_id])
+
+    game.events.each do |event|
+      puts [
+        event[:time].getlocal.strftime("%Y-%m-%d %H:%M:%S"),
+        event[:inning],
+        event[:num],
+        "#{event[:balls]}/#{event[:strikes]}/#{event[:outs]}",
+        event[:desc]].join("\t")
+    end
   end
 end
 
