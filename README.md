@@ -4,15 +4,17 @@ Access to MLB baseball scores in the terminal.
 
 ## Overview
 
-Don't you just wish you could have a little terminal app to stream out real-time stats for a MLB baseball game? Look no further!
+Don't you just wish you could have a little terminal app to stream out real-time stats for a MLB baseball game? Look no further! _Please note, the use of this data is subjected to the terms put forth by the MLB. More information can be found here: [http://gdx.mlb.com/components/copyright.txt](http://gdx.mlb.com/components/copyright.txt). You're okay if you're using this data for individual use!_
 
 ### Syntax
 
 #### Commands
 
-* help: Display global or [command] help documentation.
-* games: Print out a list of scheduled games for the specified date
-* game: Print out play-by-play events for a specific game. Use `--pitches` to output realtime pitch trajectory data.
+To find out more about a specific command, use `mlb [command] --help` to view the appropriate documentation.
+
+* `help`: Display global or [command] help documentation.
+* `games [options]`: Print out a list of scheduled games for the specified date
+* `game [options] [game_number]`: Print out play-by-play events for a specific game. Use `--pitches` to output realtime pitch trajectory data.
 
 #### Global options
 
@@ -21,6 +23,75 @@ Don't you just wish you could have a little terminal app to stream out real-time
 * -v, --version: Display version information
 
 * -t, --trace: Display backtrace when an error occurs
+
+### Data Output Format
+
+Each command outputs data in tab-separated format. When outputting data for a game in progress, the application will continue to pipe in data as it is made available.
+
+#### `games` (Game listings)
+
+1. Game index. A numbered value unique to the specified date that is referenced in the `game` command.
+2. Opposing teams. A string containing: `<Away Team> (Wins - Losses) @ <Home Team> (Wins - Losses).
+3. Starting time and status.
+4. Current score.
+
+#### `game` (Game events)
+
+1. Event time.
+2. Inning.
+3. Event number.
+4. Event description.
+
+#### `game --pitches` (Pitch events)
+
+1. Pitch time.
+2. Inning.
+3. Top/Bottom of inning.
+4. Pitcher name.
+5. Batter name.
+6. Pitch type. (S-Strike, B-Ball, X-hit)
+7. X (x). The horizontal location of the pitch as it crosses the home plate. Units: Old Gameday coordinate system
+8. Y (y). The vertical location of the pitch as it crosses the home plate. Units: Old Gameday coordinate system
+9. Start speed (start_speed). The initial speed of the pitch. Units: miles per hour
+10. End speed (end_speed). The speed measured as it crosses the home plate. Units: miles per hour
+11. Top of Strike Zone (sz_top). The distance from the ground to the top of the strike zone. Units: feet
+12. Bottom of Strike Zone (sz_bot). The distance from the ground to the bottom of the strike zone. Units: feet
+13. Horizontal movement (pfx_x). The horizontal movement of a pitch relative to a theoretical pitch thrown at the same speed with no spin-induced movement. Measured at 40 feet from the home plate. Units: inches
+14. Vertical movement (pfx_z). The vertical movement of a pitch relative to a theoretical pitch thrown at the same speed with no spin-induced movement. Measured at 40 feet from the home plate. Units: inches
+15. Horizontal pitch location at home plate (px). The horizontal location of the pitch as it crosses home plate from the perspective of the umpire. Units: feet
+16. Vertical pitch location at home plate (pz). The height of the pitch as it crosses the front of home plate. Units: feet
+17. Initial horizontal measurement for pitch (x0). Initial horizontal measurement of pitch as measured by PITCHf/x. Units: feet
+18. Initial depth measurement for pitch (y0). Initial deptch measurement of pitch as measured by PITCHf/x. Note that this is fixed per stadium and typically located around 40-50 feet from home plate. Units: feet
+19. Initial height measurement for pitch (z0). Initial height measurement of pitch as measured by PITCHf/x. Units: feet
+20. Initial x velocity (vxo). Initial velocity in the horizontal direction at the initial point. Units: feet per second
+21. Initial y velocity (vxo). Initial velocity in the depth-wise direction at the initial point. Units: feet per second
+22. Initial z velocity (vxo). Initial velocity in the vertical direction at the initial point. Units: feet per second
+23. Breaking point (break_y). The distance from the home plate in which the pitch achieved its greatest deviation from the straight line path between the release point and the front of home plate. Units: feet
+24. Breaking angle (break_angle). The angle at which the pitch crossed the front of home plate as seen by the umpire. Units: degrees
+25. Breaking length (break_length). The greatest distance between the pitch's trajectory and the straight path between release and home plate. Units: inches
+26. Pitch type (pitch_type). Pitch type as classified by the PITCHf/x system.
+  * FA = Fastball
+  * FF = Four-seam fastball
+  * FT = Two-seam fastball
+  * FC = Fastball (cutter)
+  * FS / SI / SF = Fastball (sinker, split-fingered)
+  * SL = Slider
+  * CH = Changeup
+  * CB / CU = Curveball
+  * KC = Knuckle-curve
+  * KN = Knuckleball
+  * EP = Eephus
+  * UN / XX = Unidentified
+  * PO / FO = Pitch out
+27. Pitch type confidence (type_confidence). A rating corresponding to the liklihood of the pitch type classification.
+28. Pitch zone (zone).
+29. Nasty factor (nasty). A auto-generated factor that describes the difficulty in hitting the pitch.
+30. Spin direction (spin_dir).
+31. Spin rate (spin_rate).
+32. Comments (cc).
+33. Unknown (mt).
+
+For more information regarding PITCHf/x tracjectory data, please visit [http://fastballs.wordpress.com/category/pitchfx-glossary/](http://fastballs.wordpress.com/category/pitchfx-glossary/).
 
 ### Examples
 
