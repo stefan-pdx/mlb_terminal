@@ -9,8 +9,8 @@ Gem::Specification.new do |s|
   s.authors     = ["Stefan Novak"]
   s.email       = ["stefan.louis.novak@gmail.com"]
   s.homepage    = "https://github.com/slnovak/mlb_terminal"
-  s.description = %q{A small terminal app to translate MLB baseball feeds into the terminal for easy manipulation.} 
-  s.summary     = %q{Command line interface to keeping track of MLB ballgames}
+  s.description = %q{A small terminal app to pipe formatted MLB baseball feeds into the terminal for easy manipulation. Includes access to both historic and real-time baseball feeds including play-by-play and pitch-by-pitch data. Visit the homepage for examples!} 
+  s.summary     = %q{A small terminal app for accessing historic and realtime MLB game data}
 
   s.files         = `git ls-files`.split("\n")
   s.test_files    = `git ls-files -- {test,spec,features}/*`.split("\n")

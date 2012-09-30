@@ -12,7 +12,7 @@ Don't you just wish you could have a little terminal app to stream out real-time
 
 * help: Display global or [command] help documentation.
 * games: Print out a list of scheduled games for the specified date
-* game: Print out play-by-play events for a specific game
+* game: Print out play-by-play events for a specific game. Use `--pitches` to output realtime pitch trajectory data.
 
 #### Global options
 
@@ -61,3 +61,14 @@ Don't you just wish you could have a little terminal app to stream out real-time
     2012-09-29 21:37:46  7  61  1/2/2  Matt Carpenter flies out to center fielder Bryce Harper.
     2012-09-29 22:10:49  9  71  1/0/2  Bryce Harper doubles (25) on a line drive to left fielder Matt Holliday.
     2012-09-29 22:21:20  9  76  0/0/2  Jon Jay out on a sacrifice fly to center fielder Bryce Harper.   Pete Kozma scores.
+
+    > # Visualize pitch speed for Gio Gonzalez on his full game on August 8, 2012.
+    > mlb games --date 2012-08-08                              \
+        | grep Nationals                                       \
+        | cut -f 1                                             \
+        | xargs mlb game --pitches --date 2012-08-08           \
+        | awk 'BEGIN{FS="\t"}{ if ($4=="Gio Gonzalez") print}' \
+        | cut -f 1,9,6                                         \
+        | Rscript -e 'library(ggplot2); library(scales); d <- read.csv("stdin", header=F, sep="\\t", col.names=c("time", "type", "pitch_speed")); png("gio-pitch-speed.png"); ggplot(d, aes(x=as.POSIXct(time), y=pitch_speed, colour=type, shape=type)) + geom_point() + opts(title="Pitch Speed Over Time for Gio Gonzalez") + scale_x_datetime(breaks=date_breaks("1 hour"), minor_breaks=date_breaks("15 min"), labels=date_format("%H:%M")) + scale_colour_discrete(name = "Pitch Type") + scale_shape_discrete(name = "Pitch Type") + xlab("Time") + ylab("Pitch Speed"); dev.off()'
+    > open gio-pitch-speed.png
+![gio-pitch-speed.png](http://i.imgur.com/WFw3J.png)

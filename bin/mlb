@@ -17,7 +17,7 @@ command :games do |c|
   c.option '--date STRING', String, 'List games for specified dates (Default: today)'
   c.action do |args, options|
     options.default :date => Time.now.to_date.to_s
-    MLBTerminal::Client.list_games(Date.parse options.date).each_with_index do |game, index|
+    MLBTerminal::Game.list(Date.parse options.date).each_with_index do |game, index|
       puts [
         index,
         "#{game[:away_team][:name]} " \
@@ -36,6 +36,7 @@ command :game do |c|
   c.description = 'Print play-by-play action for the corresponding game. Columns: time, inning, balls/strikes/outs/description.'
   c.example 'description', 'command example'
   c.option '--date STRING', String, 'Specify the date for the corresponding game number.'
+  c.option '--pitches', 'Print pitch-by-pitch action'
   c.action do |args, options|
     options.default :date => Time.now.to_date.to_s
 
@@ -47,23 +48,68 @@ command :game do |c|
     end
     
     game_number = args.first.to_i
-    game_info = MLBTerminal::Client.list_games(date)[game_number]
+    game_info = MLBTerminal::Game.list(date)[game_number]
 
     if game_info.nil?
       puts "Error: Game does not exist"
       break
     end
     
-    game = MLBTerminal::Client.new(game_info[:game_id])
+    game = MLBTerminal::Game.new(game_info[:game_id])
 
-    game.events.each do |event|
-      puts [
-        event[:time].getlocal.strftime("%Y-%m-%d %H:%M:%S"),
-        event[:inning],
-        event[:num],
-        "#{event[:balls]}/#{event[:strikes]}/#{event[:outs]}",
-        event[:desc]].join("\t")
+    begin
+      if options.pitches
+        game.pitches.each do |pitch|
+          puts [
+            pitch[:time].getlocal.strftime("%Y-%m-%d %H:%M:%S"),
+            pitch[:inning],
+            pitch[:inning_loc],
+            pitch[:pitcher],
+            pitch[:batter],
+            pitch[:type],
+            pitch[:x],
+            pitch[:y],
+            pitch[:start_speed],
+            pitch[:end_speed],
+            pitch[:sz_top],
+            pitch[:sz_bot],
+            pitch[:pfx_x],
+            pitch[:pfx_z],
+            pitch[:px],
+            pitch[:pz],
+            pitch[:x0],
+            pitch[:y0],
+            pitch[:z0],
+            pitch[:vx0],
+            pitch[:vy0],
+            pitch[:vz0],
+            pitch[:ax],
+            pitch[:ay],
+            pitch[:az],
+            pitch[:break_y],
+            pitch[:break_angle],
+            pitch[:break_length],
+            pitch[:pitch_type],
+            pitch[:type_confidence],
+            pitch[:zone],
+            pitch[:nasty],
+            pitch[:spin_dir],
+            pitch[:spin_rate],
+            pitch[:cc],
+            pitch[:mt]].join("\t")
+        end
+      else
+        game.events.each do |event|
+          puts [
+            event[:time].getlocal.strftime("%Y-%m-%d %H:%M:%S"),
+            event[:inning],
+            event[:num],
+            "#{event[:balls]}/#{event[:strikes]}/#{event[:outs]}",
+            event[:desc]].join("\t")
+        end
+      end
+    rescue SystemExit, Interrupt
+      # Do nothing if a user issues ctrl-c.
     end
   end
 end
-
