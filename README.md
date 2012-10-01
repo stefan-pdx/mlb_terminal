@@ -1,14 +1,22 @@
-nal
+# MLB Terminal
 
-Access to MLB baseball scores in the terminal.
+Access to historical and real-time MLB baseball scores and stats in the terminal.
 
 ## Overview
 
 Don't you just wish you could have a little terminal app to stream out real-time stats for a MLB baseball game? Look no further! _Please note, the use of this data is subjected to the terms put forth by the MLB. More information can be found here: [http://gdx.mlb.com/components/copyright.txt](http://gdx.mlb.com/components/copyright.txt). You're okay if you're using this data for individual use!_
 
-### Syntax
+## Installation
 
-#### Commands
+To install MLB Terminal, please [install Ruby and RubyGems](http://docs.cloudfoundry.com/frameworks/ruby/installing-ruby.html). Then install MLB Terminal via:
+
+    gem install mlb_terminal
+
+For more information regarding this gem, please visit the RubyGems page for [mlb_terminal](https://rubygems.org/gems/mlb_terminal).
+
+## Syntax
+
+### Commands
 
 To find out more about a specific command, use `mlb [command] --help` to view the appropriate documentation.
 
@@ -16,7 +24,7 @@ To find out more about a specific command, use `mlb [command] --help` to view th
 * `games [options]`: Print out a list of scheduled games for the specified date
 * `game [options] [game_number]`: Print out play-by-play events for a specific game. Use `--pitches` to output realtime pitch trajectory data.
 
-#### Global options
+### Global options
 
 * -h, --help: Display help documentation
 
@@ -24,25 +32,25 @@ To find out more about a specific command, use `mlb [command] --help` to view th
 
 * -t, --trace: Display backtrace when an error occurs
 
-### Data Output Format
+## Data Output Format
 
 Each command outputs data in tab-separated format. When outputting data for a game in progress, the application will continue to pipe in data as it is made available.
 
-#### `games` (Game listings)
+### `games` (Game listings)
 
 1. Game index. A numbered value unique to the specified date that is referenced in the `game` command.
 2. Opposing teams. A string containing: `<Away Team> (Wins - Losses) @ <Home Team> (Wins - Losses).
 3. Starting time and status.
 4. Current score.
 
-#### `game` (Game events)
+### `game` (Game events)
 
 1. Event time.
 2. Inning.
 3. Event number.
 4. Event description.
 
-#### `game --pitches` (Pitch events)
+### `game --pitches` (Pitch events)
 
 1. Pitch time.
 2. Inning.
@@ -93,9 +101,10 @@ Each command outputs data in tab-separated format. When outputting data for a ga
 
 For more information regarding PITCHf/x tracjectory data, please visit [http://fastballs.wordpress.com/category/pitchfx-glossary/](http://fastballs.wordpress.com/category/pitchfx-glossary/).
 
-### Examples
+## Examples
 
-    > # List todays games
+List todays games:
+
     > mlb games
     0   Red Sox (69-88) @ Orioles (90-67)      7:05 ET (F)   1-9
     1   Reds (95-62) @ Pirates (76-81)         7:05 ET (F)   1-0
@@ -113,11 +122,13 @@ For more information regarding PITCHf/x tracjectory data, please visit [http://f
     13  Giants (92-65) @ Padres (74-83)        10:05 ET (F)  3-1
     14  Rockies (62-95) @ Dodgers (82-75)      10:10 ET (F)  0-8
 
-    # How did the Nationals do on 5/30/2012?
+How did the Nationals do on 5/30/2012?
+
     > mlb games --date 2012-05-30 | grep -i nationals | cut -f 2,4
     Nationals (29-21) @ Marlins (29-22) 3-5
 
-    > # How did Bryce Harper do tonight?
+How did Bryce Harper do tonight?
+
     > mlb games | grep Nationals | cut -f 1 | xargs mlb game | grep Harper
     2012-09-29 19:18:00  1  2   1/2/1  Bryce Harper singles on a soft line drive to center fielder Jon Jay.
     2012-09-29 19:20:11  1  3   1/2/1  Ryan Zimmerman doubles (36) on a fly ball to left fielder Matt Holliday.   Bryce Harper to 3rd.
@@ -133,7 +144,8 @@ For more information regarding PITCHf/x tracjectory data, please visit [http://f
     2012-09-29 22:10:49  9  71  1/0/2  Bryce Harper doubles (25) on a line drive to left fielder Matt Holliday.
     2012-09-29 22:21:20  9  76  0/0/2  Jon Jay out on a sacrifice fly to center fielder Bryce Harper.   Pete Kozma scores.
 
-    > # Visualize pitch speed for Gio Gonzalez on his full game on August 8, 2012.
+Visualize pitch speed for Gio Gonzalez on his full game on August 8, 2012.
+
     > mlb games --date 2012-08-08                              \
         | grep Nationals                                       \
         | cut -f 1                                             \
@@ -141,10 +153,11 @@ For more information regarding PITCHf/x tracjectory data, please visit [http://f
         | awk 'BEGIN{FS="\t"}{ if ($4=="Gio Gonzalez") print}' \
         | cut -f 1,9,6                                         \
         | Rscript -e 'library(ggplot2); library(scales); d <- read.csv("stdin", header=F, sep="\\t", col.names=c("time", "type", "pitch_speed")); png("gio-pitch-speed.png"); ggplot(d, aes(x=as.POSIXct(time), y=pitch_speed, colour=type, shape=type)) + geom_point() + opts(title="Pitch Speed Over Time for Gio Gonzalez") + scale_x_datetime(breaks=date_breaks("1 hour"), minor_breaks=date_breaks("15 min"), labels=date_format("%H:%M")) + scale_colour_discrete(name = "Pitch Type") + scale_shape_discrete(name = "Pitch Type") + xlab("Time") + ylab("Pitch Speed"); dev.off()'
-    > open gio-pitch-speed.png
+        
 ![gio-pitch-speed.png](http://i.imgur.com/WFw3J.png)
 
-    > # Get a breakdown of number of pitches for Ross Detwiler up until 9/30/2012
+Get a breakdown of pitch types for Ross Detwiler in this season up until 9/30/2012.
+
     > mlb pitchers --date 2012-09-30 11 \
         | grep "Ross Detwiler" \
         | cut -f 2 \
