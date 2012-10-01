@@ -4,7 +4,6 @@ require 'open-uri'
 require 'active_support/core_ext/integer/inflections'
 
 module MLBTerminal
-  MLB_BASE_URL = 'http://gd2.mlb.com/components/game/mlb'
 
   class Game
     def self.list(date = Time.now.to_date)
@@ -31,9 +30,7 @@ module MLBTerminal
     end
 
     def initialize(gameday)
-      @gameday = gameday
-      year, month, day, game_name = /([0-9]{4})_([0-9]{2})_([0-9]{2})_(.*)/.match(@gameday).to_a.slice(1,4)
-      @base_url = "#{Game.base_url_for_date(Date.new(year.to_i, month.to_i, day.to_i))}/gid_#{@gameday}"
+      @base_url = Game.parse_gameday_id_to_url gameday
     end
 
     def events(delay = 5, &block)
@@ -59,9 +56,8 @@ module MLBTerminal
 
           last_atbat = doc.xpath("//game/inning/*/atbat/@num").map(&:value).map(&:to_i).max
 
-          sleep delay
-
           if doc.xpath("//game").first["ind"] != "F"
+            sleep delay
             doc = Nokogiri::HTML(open "#{@base_url}/inning/inning_all.xml")
           end
         end while game_status != "F"
@@ -125,9 +121,8 @@ module MLBTerminal
 
           last_pitch = doc.xpath("//game/inning/*/*/pitch/@id").map(&:value).map(&:to_i).max
 
-          sleep delay
-
           if doc.xpath("//game").first["ind"] != "F"
+            sleep delay
             doc = Nokogiri::HTML(open "#{@base_url}/inning/inning_all.xml")
           end
         end while game_status != "F"
@@ -136,6 +131,21 @@ module MLBTerminal
 
     def self.base_url_for_date(date = Time.now.to_date)
       "#{MLB_BASE_URL}/year_#{date.year}/month_#{"%02d" % date.month}/day_#{"%02d" % date.day}"
+    end
+
+    def self.parse_gameday_id_to_url(gameday)
+      game_info = Game.parse_gameday_id gameday
+      "#{Game.base_url_for_date(Date.new(game_info[:year].to_i, game_info[:month].to_i, game_info[:day].to_i))}/gid_" \
+        "#{game_info[:year]}_" \
+        "#{game_info[:month]}_" \
+        "#{game_info[:day]}_" \
+        "#{game_info[:away_team]}mlb_" \
+        "#{game_info[:home_team]}mlb_" \
+        "#{game_info[:game_number]}"
+    end
+
+    def self.parse_gameday_id(gameday)
+      Hash[[:year, :month, :day, :away_team, :home_team, :game_number].zip(/[gid_]*([0-9]{4})_([0-9]{2})_([0-9]{2})_([a-z]{3})mlb_([a-z]{3})mlb_([0-9])/.match(gameday).to_a.slice(1,6))]
     end
 
     private

@@ -1,4 +1,4 @@
-# MLB Terminal
+nal
 
 Access to MLB baseball scores in the terminal.
 

@@ -10,7 +10,7 @@ program :description, 'Stream MLB games into the terminal'
  
 command :games do |c|
   c.syntax = 'mlb games [options] [date]'
-  c.summary = 'Print out a list of scheduled games for the specified date'
+  c.summary = 'Print out a list of scheduled games for the specified date.'
   c.description = 'Print out a tab-seperated value list to STDOUT wih columns ' \
                   'for index, team names, game status, and current score.'
   c.example 'description', 'mlb --date "2012-09-28" | grep Nationals'
@@ -26,6 +26,97 @@ command :games do |c|
           "(#{game[:home_team][:wins]}-#{game[:home_team][:losses]})",
         "#{game[:starts]} (#{game[:status]})",
         "#{game[:score][:away]}-#{game[:score][:home]}"].join("\t")
+    end
+  end
+end
+
+command :pitchers do |c|
+  c.syntax = 'mlb pitchers [options] [game-number]'
+  c.summary = 'Print out a list of pitchers for the specified date and game index.'
+  c.description = 'Print out a tab-seperated value list to STDOUT wih columns ' \
+                  'for team, pitcher id, and pitcher name. Note, this prints out ' \
+                  'the full line-up on the team.'
+  c.example 'description', 'mlb pitchers 11 | grep "Edwin Jackson"'
+  c.option '--date STRING', String, 'List pitchers for specified date (Default: today)'
+  c.action do |args, options|
+    options.default :date => Time.now.to_date.to_s
+
+    # Validate input
+    if (Float(args.first) rescue nil).nil?
+      puts "Error: Game number must be a valid integer"
+      break
+    elsif (args.first.to_i < 0)
+      puts "Error: Game number must be greater than or equal to 0"
+      break
+    end
+
+    game_number = args.first.to_i
+
+    gameday_id = MLBTerminal::Game.list(Date.parse options.date)[game_number][:game_id]
+
+    MLBTerminal::Pitcher.list(gameday_id).each_pair do |pitcher_id, pitcher_info|
+      puts [
+        pitcher_info[:team],
+        pitcher_id,
+        pitcher_info[:name]].join("\t")
+    end
+  end
+end
+
+command :pitcher do |c|
+  c.syntax = 'mlb pitcher [options] [game-number] [pitcher-id]'
+  c.summary = 'Print out a list of summary statistics for pitcher tendencies.'
+  c.description = 'Print out a tab-seperated value list to STDOUT wih columns ' \
+                  'for pitcher name, pitcher team, date, away team, home team, ' \
+                  'pitch count, average speed, pitch type, pitch count, average ' \
+                  'movement, pfx, velocity, average initial x-position, and ' \
+                  'average initial z-position.'
+  c.example 'description', 'mlb pitchers --date 2012-09-30 11 | grep "Ross Detwiler" ' \
+            '| cut -f 2 | xargs mlb pitcher --date 2012-09-30 11'
+  c.option '--date STRING', String, 'List pitchers for specified date (Default: today)'
+  c.action do |args, options|
+    game_number, pitcher_id = args
+    options.default :date => Time.now.to_date.to_s
+
+    # Validate input
+    if (Float(game_number) rescue nil).nil?
+      puts "Error: Game number must be a valid integer"
+      break
+    elsif (game_number.to_i < 0)
+      puts "Error: Game number must be greater than or equal to 0"
+      break
+    end
+
+    if (Float(pitcher_id) rescue nil).nil?
+      puts "Error: Pitcher ID must be a valid integer"
+      break
+    elsif (pitcher_id.to_i < 0)
+      puts "Error: Pitcher ID must be greater than or equal to 0"
+      break
+    end
+
+    game_number = game_number.to_i
+    games = MLBTerminal::Game.list(Date.parse options.date)
+    gameday_id = games[game_number][:game_id]
+    pitcher = MLBTerminal::Pitcher.new(gameday_id, pitcher_id)
+
+    pitcher.pitch_tendency_history.each do |game|
+      game_info = MLBTerminal::Game.parse_gameday_id(game[:gameday_id])
+      puts [
+        game[:pitcher_name],
+        game[:pitcher_team],
+        Date.new(game_info[:year].to_i, game_info[:month].to_i, game_info[:day].to_i),
+        MLBTerminal::TEAMS[game_info[:away_team].to_sym],
+        MLBTerminal::TEAMS[game_info[:home_team].to_sym],
+        game[:pitch_count],
+        game[:avg_speed],
+        game[:pitch_type],
+        game[:pitch_number],
+        game[:movement],
+        game[:pfx],
+        game[:vel],
+        game[:avg_x0],
+        game[:avg_z0]].join("\t")
     end
   end
 end
