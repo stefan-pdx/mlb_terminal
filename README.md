@@ -143,3 +143,16 @@ For more information regarding PITCHf/x tracjectory data, please visit [http://f
         | Rscript -e 'library(ggplot2); library(scales); d <- read.csv("stdin", header=F, sep="\\t", col.names=c("time", "type", "pitch_speed")); png("gio-pitch-speed.png"); ggplot(d, aes(x=as.POSIXct(time), y=pitch_speed, colour=type, shape=type)) + geom_point() + opts(title="Pitch Speed Over Time for Gio Gonzalez") + scale_x_datetime(breaks=date_breaks("1 hour"), minor_breaks=date_breaks("15 min"), labels=date_format("%H:%M")) + scale_colour_discrete(name = "Pitch Type") + scale_shape_discrete(name = "Pitch Type") + xlab("Time") + ylab("Pitch Speed"); dev.off()'
     > open gio-pitch-speed.png
 ![gio-pitch-speed.png](http://i.imgur.com/WFw3J.png)
+
+    > # Get a breakdown of number of pitches for Ross Detwiler up until 9/30/2012
+    > mlb pitchers --date 2012-09-30 11 \
+        | grep "Ross Detwiler" \
+        | cut -f 2 \
+        | xargs mlb pitcher --date 2012-09-30 11 \
+        | cut -f 8,9 \
+        | awk 'BEGIN{FS="\t"}{arr[$1]+=$2} END {for (i in arr) {print i,arr[i]}}' \
+        | sort
+    Changeup 172
+    Four-seam Fastball 1136
+    Sinker 838
+    Slider 314
