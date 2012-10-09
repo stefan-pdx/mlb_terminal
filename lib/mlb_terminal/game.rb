@@ -33,15 +33,19 @@ module MLBTerminal
       @base_url = Game.parse_gameday_id_to_url gameday
     end
 
-    def events(delay = 5, &block)
+    def events(delay = 2, &block)
       last_atbat = 0
 
       Enumerator.new do |y|
         begin
           doc = Nokogiri::HTML(open "#{@base_url}/game_events.xml")
+
+          if doc.xpath("//game/inning/*/atbat").count == 0
+            break
+          end
           
           doc.xpath("//game/inning[*/atbat/@num > #{last_atbat}]").each do |inning|
-            inning.xpath("*/atbat").each do |at_bat|
+            inning.xpath("*/atbat[@num > #{last_atbat}]").each do |at_bat|
               y.yield({
                 :inning => inning["num"],
                 :inning_loc => at_bat.xpath("..").first.name.camelcase,
@@ -56,21 +60,45 @@ module MLBTerminal
 
           last_atbat = doc.xpath("//game/inning/*/atbat/@num").map(&:value).map(&:to_i).max
 
-          if doc.xpath("//game").first["ind"] != "F"
+          if game_status != "F"
             sleep delay
-            doc = Nokogiri::HTML(open "#{@base_url}/inning/inning_all.xml")
           end
         end while game_status != "F"
       end.each(&block)
     end
 
-    def pitches(delay = 5, &block)
+    def hits(delay = 2, &block)
+      players = player_lookup
+      next_hit = 0
+      Enumerator.new do |y|
+        begin
+          doc = Nokogiri::HTML(open "#{@base_url}/inning/inning_hit.xml")
+          doc.xpath("//hitchart/hip").slice(next_hit..-1).each do |hit|
+            y.yield({
+              :inning => hit["inning"],
+              :inning_loc => (hit["team"]=="A" ? "Top" : "Bottom"),
+              :batter => players[hit["batter"]],
+              :pitcher => players[hit["pitcher"]],
+              :type => hit["type"],
+              :desc => hit["des"],
+              :x => hit["x"].to_f,
+              :y => hit["y"].to_f})
+          end
+          if game_status != "F"
+            sleep delay
+          end
+          next_hit = doc.xpath("//hitchart/hip").count
+        end while game_status != "F"
+      end.each(&block)
+    end
+
+    def pitches(delay = 2, &block)
       last_pitch = 0
       players = player_lookup
-      doc = Nokogiri::HTML(open "#{@base_url}/inning/inning_all.xml")
 
       Enumerator.new do |y|
         begin
+          doc = Nokogiri::HTML(open "#{@base_url}/inning/inning_all.xml")
           doc.xpath("//game/inning[*/*/pitch/@id > #{last_pitch}]").each do |inning|
 
             inning.xpath("*/atbat").each do |at_bat|
@@ -123,7 +151,6 @@ module MLBTerminal
 
           if doc.xpath("//game").first["ind"] != "F"
             sleep delay
-            doc = Nokogiri::HTML(open "#{@base_url}/inning/inning_all.xml")
           end
         end while game_status != "F"
       end.each(&block)

@@ -4,6 +4,7 @@ require 'rubygems'
 require 'commander/import'
 require 'mlb_terminal'
 require 'date'
+require 'chronic'
 
 program :version, MLBTerminal::VERSION
 program :description, 'Stream MLB games into the terminal'
@@ -13,11 +14,11 @@ command :games do |c|
   c.summary = 'Print out a list of scheduled games for the specified date.'
   c.description = 'Print out a tab-seperated value list to STDOUT wih columns ' \
                   'for index, team names, game status, and current score.'
-  c.example 'description', 'mlb --date "2012-09-28" | grep Nationals'
+  c.example 'description', 'mlb --date "3 days ago" | grep Nationals'
   c.option '--date STRING', String, 'List games for specified dates (Default: today)'
   c.action do |args, options|
     options.default :date => Time.now.to_date.to_s
-    MLBTerminal::Game.list(Date.parse options.date).each_with_index do |game, index|
+    MLBTerminal::Game.list(Chronic.parse(options.date)).each_with_index do |game, index|
       puts [
         index,
         "#{game[:away_team][:name]} " \
@@ -52,7 +53,7 @@ command :pitchers do |c|
 
     game_number = args.first.to_i
 
-    gameday_id = MLBTerminal::Game.list(Date.parse options.date)[game_number][:game_id]
+    gameday_id = MLBTerminal::Game.list(Chronic.parse(options.date))[game_number][:game_id]
 
     MLBTerminal::Pitcher.list(gameday_id).each_pair do |pitcher_id, pitcher_info|
       puts [
@@ -96,7 +97,7 @@ command :pitcher do |c|
     end
 
     game_number = game_number.to_i
-    games = MLBTerminal::Game.list(Date.parse options.date)
+    games = MLBTerminal::Game.list(Chronic.parse(options.date))
     gameday_id = games[game_number][:game_id]
     pitcher = MLBTerminal::Pitcher.new(gameday_id, pitcher_id)
 
@@ -124,15 +125,15 @@ end
 command :game do |c|
   c.syntax = 'mlb game [options] [game-number]'
   c.summary = 'Print game events'
-  c.description = 'Print play-by-play action for the corresponding game. Columns: time, inning, balls/strikes/outs/description.'
-  c.example 'description', 'command example'
+  c.description = 'Print play-by-play action for the corresponding game. Columns: time, inning, balls/strikes/outs/description. When the --pitches flag is used, columns include: time, inning, inning location, pitcher, batter, pitch type, x (old), y (old), start speed, end speed, top of strike zone, bottom of strike zone, horizontal movement, vertical movement, x-location at plate, y-location at plate, initial horizontal location, initial distance from home plate, initial height position, initial x-velocity, initial y-velocity, initial z-velocity, breaking point, breaking angle, breaking length, pitch type, pitch type confidence, pitch zone, nasty factor, spin direction, spin rate, comments and an unknown field. When --hits is specified, fields include: inning, inning location, pitcher, batter, Hit/Out/Error designation, description of hit, x-location (in pixels based on 250x250 image), y-location (in pixels based on 250x250 image).'
   c.option '--date STRING', String, 'Specify the date for the corresponding game number.'
   c.option '--pitches', 'Print pitch-by-pitch action'
+  c.option '--hits', 'Print hit locations'
   c.action do |args, options|
     options.default :date => Time.now.to_date.to_s
 
     # Input validation.
-    date = (Date.parse(options.date) rescue Time.now.to_date)
+    date = (Chronic.parse(options.date) rescue Time.now)
     if (Float(args.first) rescue nil).nil?
       puts "Error: Game number must be a valid integer"
       break
@@ -152,7 +153,7 @@ command :game do |c|
       if options.pitches
         game.pitches.each do |pitch|
           puts [
-            pitch[:time].getlocal.strftime("%Y-%m-%d %H:%M:%S"),
+            pitch[:time].getlocal,
             pitch[:inning],
             pitch[:inning_loc],
             pitch[:pitcher],
@@ -189,17 +190,30 @@ command :game do |c|
             pitch[:cc],
             pitch[:mt]].join("\t")
         end
+      elsif options.hits
+        game.hits.each do |hit|
+          puts [
+            hit[:inning],
+            hit[:inning_loc],
+            hit[:pitcher],
+            hit[:batter],
+            hit[:type],
+            hit[:desc],
+            hit[:x],
+            hit[:y]].join("\t")
+        end
       else
         game.events.each do |event|
           puts [
-            event[:time].getlocal.strftime("%Y-%m-%d %H:%M:%S"),
+            event[:time].getlocal.to_date.to_s,
             event[:inning],
+            event[:inning_loc],
             event[:num],
             "#{event[:balls]}/#{event[:strikes]}/#{event[:outs]}",
             event[:desc]].join("\t")
         end
       end
-    rescue SystemExit, Interrupt
+    rescue SystemExit, Interrupt, Errno::EPIPE
       # Do nothing if a user issues ctrl-c.
     end
   end

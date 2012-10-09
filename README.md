@@ -6,15 +6,69 @@ Access to historical and real-time MLB baseball scores and stats in the terminal
 
 Don't you just wish you could have a little terminal app to stream out real-time stats for a MLB baseball game? Look no further! _Please note, the use of this data is subjected to the terms put forth by the MLB. More information can be found here: [http://gdx.mlb.com/components/copyright.txt](http://gdx.mlb.com/components/copyright.txt). You're okay if you're using this data for individual use!_
 
+Although there are several other gems out there that provide access to MLB Gamday data, `mlb_terminal` provides a one-stop shop for streaming data and piping it to other processes. For the true sports hacker in us all!
+
 ## Installation
 
-To install MLB Terminal, please [install Ruby and RubyGems](http://docs.cloudfoundry.com/frameworks/ruby/installing-ruby.html). Then install MLB Terminal via:
+To install MLB Terminal, please [install Ruby 1.9.3 and RubyGems](http://docs.cloudfoundry.com/frameworks/ruby/installing-ruby.html). Then install MLB Terminal via:
 
     gem install mlb_terminal
 
 For more information regarding this gem, please visit the RubyGems page for [mlb_terminal](https://rubygems.org/gems/mlb_terminal).
 
 ## Syntax
+
+Typical usage starts off by scanning the games for a specific date:
+
+    > mlb games --date yesterday
+    
+    0  Athletics (0-2) @ Tigers (2-0)     12:00 ET (Final)  4-5
+    1  Nationals (1-0) @ Cardinals (0-1)  3:00 ET (Final)   3-2
+    2  Yankees (1-0) @ Orioles (0-1)      6:00 ET (Final)   7-2
+    3  Reds (2-0) @ Giants (0-2)          9:30 ET (Final)   9-0
+
+If the `--date` flag isn't used, all commands will assume today.
+
+Then you can use the index in the first column to pull out additional data, such as game events, pitches and hits.
+
+    > mlb game --date yesterday --pitches 1 | head | cut -f 1,4-6
+    
+    2012-10-07 15:08:11 -0400  Adam Wainwright  Jayson Werth    B
+    2012-10-07 15:08:29 -0400  Adam Wainwright  Jayson Werth    S
+    2012-10-07 15:08:53 -0400  Adam Wainwright  Jayson Werth    B
+    2012-10-07 15:09:08 -0400  Adam Wainwright  Jayson Werth    S
+    2012-10-07 15:09:53 -0400  Adam Wainwright  Jayson Werth    S
+    2012-10-07 15:10:40 -0400  Adam Wainwright  Bryce Harper    X
+    2012-10-07 15:10:55 -0400  Adam Wainwright  Ryan Zimmerman  S
+    2012-10-07 15:11:13 -0400  Adam Wainwright  Ryan Zimmerman  B
+    2012-10-07 15:11:33 -0400  Adam Wainwright  Ryan Zimmerman  S
+    2012-10-07 15:12:16 -0400  Adam Wainwright  Ryan Zimmerman  S    
+
+    > mlb game --date yesterday --hits 1 | head
+    
+    1  Top     Adam Wainwright  Bryce Harper    O  Groundout  140.56  163.65
+    1  Bottom  Gio Gonzalez     Carlos Beltran  O  Groundout  140.56  162.65
+    1  Bottom  Gio Gonzalez     Allen Craig     O  Flyout     128.51  82.33
+    2  Top     Adam Wainwright  Ian Desmond     H  Single     134.54  87.35
+    2  Top     Adam Wainwright  Kurt Suzuki     H  Single     87.35   132.53
+    2  Top     Adam Wainwright  Jayson Werth    O  Groundout  111.45  164.66
+    2  Bottom  Gio Gonzalez     David Freese    O  Flyout     125.5   47.19
+    2  Bottom  Gio Gonzalez     Jon Jay         O  Flyout     73.29   108.43
+    2  Bottom  Gio Gonzalez     Carlos Beltran  O  Flyout     145.58  71.29
+    3  Top     Adam Wainwright  Ryan Zimmerman  H  Single     113.45  98.39
+    
+    > mlb game --date yesterday --pitches 1 | head
+    
+    2012-10-07  1  Top     1   2/3/1  Jayson Werth strikes out swinging.
+    2012-10-07  1  Top     2   0/0/2  Bryce Harper grounds out, second baseman Daniel Descalso to first baseman Allen Craig.
+    2012-10-07  1  Top     3   1/3/3  Ryan Zimmerman strikes out swinging.
+    2012-10-07  1  Bottom  4   1/3/1  Jon Jay called out on strikes.
+    2012-10-07  1  Bottom  5   2/1/2  Carlos Beltran grounds out, second baseman Danny Espinosa to first baseman Adam LaRoche.
+    2012-10-07  1  Bottom  6   4/1/2  Matt Holliday walks.
+    2012-10-07  1  Bottom  7   2/2/3  Allen Craig flies out to center fielder Bryce Harper.
+    2012-10-07  2  Top     8   4/1/0  Adam LaRoche walks.
+    2012-10-07  2  Top     9   0/3/1  Michael Morse strikes out swinging.
+    2012-10-07  2  Top     10  0/1/1  Ian Desmond singles on a line drive to center fielder Jon Jay.  Adam LaRoche to 3rd.
 
 ### Commands
 
@@ -47,14 +101,15 @@ Each command outputs data in tab-separated format. When outputting data for a ga
 
 1. Event time.
 2. Inning.
-3. Event number.
-4. Event description.
+3. Top or bottom of inning.
+4. Event number.
+5. Event description.
 
 ### `game --pitches` (Pitch events)
 
 1. Pitch time.
 2. Inning.
-3. Top/Bottom of inning.
+3. Top or bottom of inning.
 4. Pitcher name.
 5. Batter name.
 6. Pitch type. (S-Strike, B-Ball, X-hit)
@@ -101,11 +156,25 @@ Each command outputs data in tab-separated format. When outputting data for a ga
 
 For more information regarding PITCHf/x tracjectory data, please visit [http://fastballs.wordpress.com/category/pitchfx-glossary/](http://fastballs.wordpress.com/category/pitchfx-glossary/).
 
+### `game --hits` (Hit events)
+
+You also have access to hit locations for each batter. However, the coordinate system that is used relies on a 250-by-250 pixel image where the corresponding scale depends on which stadium the hit was made at. See the examples of how hits can be plotted on a generic baseball field.
+
+1. Inning.
+2. Top or bottom of inning.
+3. Pitcher.
+4. Batter.
+5. Hit / Out / Error.
+6. Description of hit.
+7. X-coordinate.
+8. Y-coordinate.
+
 ## Examples
 
 List todays games:
 
     > mlb games
+    
     0   Red Sox (69-88) @ Orioles (90-67)      7:05 ET (F)   1-9
     1   Reds (95-62) @ Pirates (76-81)         7:05 ET (F)   1-0
     2   Royals (70-87) @ Indians (66-91)       7:05 ET (F)   5-8
@@ -125,11 +194,13 @@ List todays games:
 How did the Nationals do on 5/30/2012?
 
     > mlb games --date 2012-05-30 | grep -i nationals | cut -f 2,4
+    
     Nationals (29-21) @ Marlins (29-22) 3-5
 
 How did Bryce Harper do tonight?
 
     > mlb games | grep Nationals | cut -f 1 | xargs mlb game | grep Harper
+    
     2012-09-29 19:18:00  1  2   1/2/1  Bryce Harper singles on a soft line drive to center fielder Jon Jay.
     2012-09-29 19:20:11  1  3   1/2/1  Ryan Zimmerman doubles (36) on a fly ball to left fielder Matt Holliday.   Bryce Harper to 3rd.
     2012-09-29 19:26:56  1  5   0/0/1  Play reviewed and overturned: Michael Morse hits a grand slam (17) to right field.   Bryce Harper scores.    Ryan Zimmerman scores.    Adam LaRoche scores.
@@ -152,7 +223,20 @@ Visualize pitch speed for Gio Gonzalez on his full game on August 8, 2012.
         | xargs mlb game --pitches --date 2012-08-08           \
         | awk 'BEGIN{FS="\t"}{ if ($4=="Gio Gonzalez") print}' \
         | cut -f 1,9,6                                         \
-        | Rscript -e 'library(ggplot2); library(scales); d <- read.csv("stdin", header=F, sep="\\t", col.names=c("time", "type", "pitch_speed")); png("gio-pitch-speed.png"); ggplot(d, aes(x=as.POSIXct(time), y=pitch_speed, colour=type, shape=type)) + geom_point() + opts(title="Pitch Speed Over Time for Gio Gonzalez") + scale_x_datetime(breaks=date_breaks("1 hour"), minor_breaks=date_breaks("15 min"), labels=date_format("%H:%M")) + scale_colour_discrete(name = "Pitch Type") + scale_shape_discrete(name = "Pitch Type") + xlab("Time") + ylab("Pitch Speed"); dev.off()'
+        | Rscript -e "
+            library(ggplot2); \
+            library(scales); \
+            d <- read.csv('stdin', header=F, sep='\\\\t', col.names=c('time', 'type', 'pitch_speed')); \
+            png('gio-pitch-speed.png'); \
+            ggplot(d, aes(x=as.POSIXlt(time), y=pitch_speed, colour=type, shape=type)) \
+              + geom_point() \
+              + labs(title='Pitch Speed Over Time for Gio Gonzalez', x='Time', y='Pitch Speed') \
+              + scale_x_datetime(breaks=date_breaks('1 hour'), minor_breaks=date_breaks('15 min'), labels=date_format('%H:%M')) \
+              + scale_colour_discrete(name = 'Pitch Type') \
+              + scale_shape_discrete(name = 'Pitch Type'); \
+            dev.off()"
+            
+            
         
 ![gio-pitch-speed.png](http://i.imgur.com/WFw3J.png)
 
@@ -169,3 +253,40 @@ Get a breakdown of pitch types for Ross Detwiler in this season up until 9/30/20
     Four-seam Fastball 1136
     Sinker 838
     Slider 314
+
+What is Adam LaRoche's last 30-day spray pattern compared to that of 60-90 days ago?
+
+    > for DAY in `seq 1 30; seq 60 90`
+      do
+        mlb games --date "$DAY days ago"                 \
+          | grep Nationals                               \
+          | cut -f 1                                     \
+          | xargs mlb game --date "$DAY days ago" --hits \
+          | grep "Adam LaRoche"                          \
+          | cut -f 5-8                                   \
+          | sed -e "s/^/Day #DAY	/"
+      done \
+          | Rscript -e " \
+              library(ggplot2); \
+              library(png); \
+              library(gridExtra); \
+              field_url <- 'http://i.imgur.com/0phAi.png'; \
+              download.file(field_url, '/tmp/baseball-field.png', mode = 'wb'); \
+              m <- readPNG('/tmp/baseball-field.png', FALSE); \
+              w <- matrix(rgb(m[,,1],m[,,2],m[,,3], m[,,4] * 0.2), nrow=dim(m)[1]); \
+              d <- read.csv('stdin', header=F, sep='\\\\t', col.names=c('time', 'type', 'desc', 'x', 'y')); \
+              png('laroche-spray-chart.png', width=600, height=1200); \
+              ggplot(d, aes(x,y, shape=type, colour=type)) \
+                + geom_point() \
+                + annotation_custom(xmin=-Inf, ymin=-Inf, xmax=Inf, ymax=Inf, rasterGrob(w)) \
+                + labs(title='Hit Locations For Adam LaRoche', x='', y='') \
+                + scale_x_continuous(breaks=c(), limits = c(0,250)) \
+                + scale_y_continuous(breaks=c(), limits = c(0,250)) \
+                + theme(panel.grid.minor = element_blank(), \
+                    panel.grid.minor = element_blank(), \
+                    panel.background = element_blank(), \
+                    axis.ticks = element_blank()) \
+                + facet_grid(time ~ .); \
+              dev.off();"
+
+![laroach-spray-chart.png](http://i.imgur.com/Jj3L9.png)

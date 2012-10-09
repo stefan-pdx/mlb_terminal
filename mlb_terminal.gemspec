@@ -20,4 +20,7 @@ Gem::Specification.new do |s|
   s.add_dependency "commander", "~> 4.1.2"
   s.add_dependency "nokogiri", "~> 1.5.5"
   s.add_dependency "activesupport", "~> 3.2.8"
+  s.add_dependency "chronic", "~> 0.8.0"
+
+  s.required_ruby_version = '>= 1.9'
 end
