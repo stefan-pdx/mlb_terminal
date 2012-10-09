@@ -169,6 +169,9 @@ You also have access to hit locations for each batter. However, the coordinate s
 7. X-coordinate.
 8. Y-coordinate.
 
+Note that the y-coordinate for the hit is the pixel location from the top of the coordinate frame. See the LaRoche example of how to plot this data.
+
+
 ## Examples
 
 List todays games:
@@ -281,7 +284,7 @@ What is Adam LaRoche's last 30-day spray pattern compared to that of 60-90 days 
               w <- matrix(rgb(m[,,1],m[,,2],m[,,3], m[,,4] * 0.2), nrow=dim(m)[1]); \
               d <- read.csv('stdin', header=F, sep='\\\\t', col.names=c('time', 'type', 'desc', 'x', 'y')); \
               png('laroche-spray-chart.png', width=600, height=1200); \
-              ggplot(d, aes(x,y, shape=type, colour=type)) \
+              ggplot(d, aes(x, 250-y, shape=type, colour=type)) \
                 + geom_point() \
                 + annotation_custom(xmin=-Inf, ymin=-Inf, xmax=Inf, ymax=Inf, rasterGrob(w)) \
                 + labs(title='Hit Locations For Adam LaRoche', x='', y='') \
@@ -294,4 +297,4 @@ What is Adam LaRoche's last 30-day spray pattern compared to that of 60-90 days 
                 + facet_grid(time ~ .); \
               dev.off();"
 
-![laroach-spray-chart.png](http://i.imgur.com/Jj3L9.png)
+![laroach-spray-chart.png](http://i.imgur.com/Oiq9Q.png)
