@@ -264,7 +264,12 @@ What is Adam LaRoche's last 30-day spray pattern compared to that of 60-90 days 
           | xargs mlb game --date "$DAY days ago" --hits \
           | grep "Adam LaRoche"                          \
           | cut -f 5-8                                   \
-          | sed -e "s/^/Day #DAY	/"
+          | awk -v day="$DAY" '
+              BEGIN{FS='\t'; OFS='\t'}
+              {
+                if (day <= 30) printf("Day 1-30");
+                else printf("Day 60-90");
+                printf("\t%s\n",  $0)}'
       done \
           | Rscript -e " \
               library(ggplot2); \
