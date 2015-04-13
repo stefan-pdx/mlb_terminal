@@ -8,7 +8,7 @@ require 'chronic'
 
 program :version, MLBTerminal::VERSION
 program :description, 'Stream MLB games into the terminal'
- 
+
 command :games do |c|
   c.syntax = 'mlb games [options] [date]'
   c.summary = 'Print out a list of scheduled games for the specified date.'
@@ -19,7 +19,7 @@ command :games do |c|
   c.action do |args, options|
     options.default :date => Time.now.to_date.to_s
     MLBTerminal::Game.list(Chronic.parse(options.date)).each_with_index do |game, index|
-      puts [
+      game_info = [
         index,
         "#{game[:away_team][:name]} " \
           "(#{game[:away_team][:wins]}-#{game[:away_team][:losses]}) " \
@@ -27,6 +27,17 @@ command :games do |c|
           "(#{game[:home_team][:wins]}-#{game[:home_team][:losses]})",
         "#{game[:starts]} (#{game[:status]})",
         "#{game[:score][:away]}-#{game[:score][:home]}"].join("\t")
+      if game[:status].include?("Game Over") || game[:status].include?("Final")
+        puts game_info.colorize(:red)
+      elsif game[:status].include? "In Progress"
+        puts game_info.colorize(:green)
+      elsif game[:status].include? "Warmup"
+        puts game_info.colorize(:yellow)
+      elsif game[:status].include? "Preview"
+        puts game_info.colorize(:blue)
+      else
+        puts game_info
+      end
     end
   end
 end
@@ -138,7 +149,7 @@ command :game do |c|
       puts "Error: Game number must be a valid integer"
       break
     end
-    
+
     game_number = args.first.to_i
     game_info = MLBTerminal::Game.list(date)[game_number]
 
@@ -146,7 +157,7 @@ command :game do |c|
       puts "Error: Game does not exist"
       break
     end
-    
+
     game = MLBTerminal::Game.new(game_info[:game_id])
 
     begin
@@ -192,7 +203,7 @@ command :game do |c|
         end
       elsif options.hits
         game.hits.each do |hit|
-          puts [
+          hit_info =  [
             hit[:inning],
             hit[:inning_loc],
             hit[:pitcher],
@@ -201,16 +212,40 @@ command :game do |c|
             hit[:desc],
             hit[:x],
             hit[:y]].join("\t")
+          if hit[:type].include? "O"
+            puts hit_info.colorize(:red)
+          elsif hit[:type].include? "H"
+            puts hit_info.colorize(:green)
+          elsif hit[:type].include? "E"
+            puts hit_info.colorize(:yellow)
+          else
+            puts hit_info
+          end
         end
       else
         game.events.each do |event|
-          puts [
+          event_info = [
             event[:time].getlocal.to_date.to_s,
             event[:inning],
             event[:inning_loc],
             event[:num],
             "#{event[:balls]}/#{event[:strikes]}/#{event[:outs]}",
             event[:desc]].join("\t")
+          if event[:desc].downcase.include?("single") ||
+              event[:desc].downcase.include?("double") ||
+              event[:desc].downcase.include?("triple") ||
+              event[:desc].downcase.include?("homer")
+            puts event_info.colorize(:green)
+          elsif event[:desc].downcase.include?("out")
+            puts event_info.colorize(:red)
+          elsif event[:desc].downcase.include?("error")
+            puts event_info.colorize(:yellow)
+          elsif event[:desc].downcase.include?("walk") ||
+                event[:desc].downcase.include?("hit by")
+            puts event_info.colorize(:blue)
+          else
+            puts event_info
+          end
         end
       end
     rescue SystemExit, Interrupt, Errno::EPIPE

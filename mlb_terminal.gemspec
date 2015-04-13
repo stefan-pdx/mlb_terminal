@@ -9,7 +9,7 @@ Gem::Specification.new do |s|
   s.authors     = ["Stefan Novak"]
   s.email       = ["stefan.louis.novak@gmail.com"]
   s.homepage    = "https://github.com/slnovak/mlb_terminal"
-  s.description = %q{A small terminal app to pipe formatted MLB baseball feeds into the terminal for easy manipulation. Includes access to both historic and real-time baseball feeds including play-by-play and pitch-by-pitch data. Visit the homepage for examples!} 
+  s.description = %q{A small terminal app to pipe formatted MLB baseball feeds into the terminal for easy manipulation. Includes access to both historic and real-time baseball feeds including play-by-play and pitch-by-pitch data. Visit the homepage for examples!}
   s.summary     = %q{A small terminal app for accessing historic and realtime MLB game data}
 
   s.files         = `git ls-files`.split("\n")
@@ -21,6 +21,7 @@ Gem::Specification.new do |s|
   s.add_dependency "nokogiri", "~> 1.5.5"
   s.add_dependency "activesupport", "~> 3.2.8"
   s.add_dependency "chronic", "~> 0.8.0"
+  s.add_dependency "colorize", "~> 0.7.5"
 
   s.required_ruby_version = '>= 1.9'
 end
