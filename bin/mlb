@@ -5,9 +5,11 @@ require 'commander/import'
 require 'mlb_terminal'
 require 'date'
 require 'chronic'
+require 'colorize'
 
 program :version, MLBTerminal::VERSION
 program :description, 'Stream MLB games into the terminal'
+global_option '--nocolors'
 
 command :games do |c|
   c.syntax = 'mlb games [options] [date]'
@@ -27,16 +29,10 @@ command :games do |c|
           "(#{game[:home_team][:wins]}-#{game[:home_team][:losses]})",
         "#{game[:starts]} (#{game[:status]})",
         "#{game[:score][:away]}-#{game[:score][:home]}"].join("\t")
-      if game[:status].include?("Game Over") || game[:status].include?("Final")
-        puts game_info.colorize(:red)
-      elsif game[:status].include? "In Progress"
-        puts game_info.colorize(:green)
-      elsif game[:status].include? "Warmup"
-        puts game_info.colorize(:yellow)
-      elsif game[:status].include? "Preview"
-        puts game_info.colorize(:blue)
-      else
+      if options.nocolors
         puts game_info
+      else
+        MLBTerminal::TextDecorator.new(game_info).beautify_game
       end
     end
   end
@@ -230,22 +226,8 @@ command :game do |c|
             event[:inning_loc],
             event[:num],
             "#{event[:balls]}/#{event[:strikes]}/#{event[:outs]}",
-            event[:desc]].join("\t")
-          if event[:desc].downcase.include?("single") ||
-              event[:desc].downcase.include?("double") ||
-              event[:desc].downcase.include?("triple") ||
-              event[:desc].downcase.include?("homer")
-            puts event_info.colorize(:green)
-          elsif event[:desc].downcase.include?("out")
-            puts event_info.colorize(:red)
-          elsif event[:desc].downcase.include?("error")
-            puts event_info.colorize(:yellow)
-          elsif event[:desc].downcase.include?("walk") ||
-                event[:desc].downcase.include?("hit by")
-            puts event_info.colorize(:blue)
-          else
-            puts event_info
-          end
+            event[:desc]]
+          MLBTerminal::TextDecorator.new(event_info).beautify_event
         end
       end
     rescue SystemExit, Interrupt, Errno::EPIPE

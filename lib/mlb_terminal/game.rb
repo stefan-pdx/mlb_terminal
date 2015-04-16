@@ -2,7 +2,6 @@ require 'date'
 require 'nokogiri'
 require 'open-uri'
 require 'active_support/core_ext/integer/inflections'
-require 'colorize'
 
 module MLBTerminal
 
