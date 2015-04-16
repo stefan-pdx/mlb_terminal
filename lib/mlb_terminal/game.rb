@@ -8,6 +8,8 @@ module MLBTerminal
   class Game
     def self.list(date = Time.now.to_date)
       doc = Nokogiri::HTML(open "#{base_url_for_date date}/epg.xml")
+      top = ("\u25b4").force_encoding('utf-8')
+      bot = ("\u25be").force_encoding('utf-8')
 
       doc.xpath("//epg/game").map{|game|
         {:home_team => {
@@ -23,8 +25,8 @@ module MLBTerminal
            :away => game["away_team_runs"]},
          :starts => "#{game["time"]} #{game["time_zone"]}",
          :status => "#{game["status"]}" \
-           "#{game["status"] == "In Progress" ? 
-             ", #{game["top_inning"]=="Y" ? "Top" : "Bot"} of #{game["inning"].to_i.ordinalize}" :
+           "#{game["status"] == "In Progress" ?
+             ", #{game["top_inning"]=="Y" ? "#{top}" : "#{bot}"} #{game["inning"].to_i.ordinalize}" :
              ""}",
          :game_id => game["gameday"]}}
     end
@@ -43,7 +45,7 @@ module MLBTerminal
           if doc.xpath("//game/inning/*/atbat").count == 0
             break
           end
-          
+
           doc.xpath("//game/inning[*/atbat/@num > #{last_atbat}]").each do |inning|
             inning.xpath("*/atbat[@num > #{last_atbat}]").each do |at_bat|
               y.yield({
